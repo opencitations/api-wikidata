@@ -4,8 +4,8 @@
 #method get
 #title Wikidata REST API
 #description A RAMOSE API implementation for Wikidata
-#version 0.0.1
-#license [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/legalcode).
+#version 0.0.2
+#license This document is licensed with a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/legalcode), while the REST API itself has been created using [RAMOSE](https://github.com/opencitations/ramose), the *Restful API Manager Over SPARQL Endpoints* created by [Silvio Peroni](https://orcid.org/0000-0003-0530-4305), which is licensed with an [ISC license](https://opensource.org/licenses/ISC). All the data returned by this API are made freely available under a [Creative Commons public domain dedication (CC0)](https://creativecommons.org/publicdomain/zero/1.0/).
 #contacts [contact@opencitations.net](mailto:contact@opencitations.net)
 #endpoint https://query.wikidata.org/sparql
 #addon wikidataapi
@@ -31,12 +31,39 @@ It is possible to specify one or more DOIs as input of this operation. In this c
 * *doi*: the DOI of the citing entity;
 * *reference*: the semicolon-separated DOIs of all the entities cited by the citing ;
 * *citation_count*: the number of citations received by the citing entity;
-* *oa_link*: the link to the Open Access version of the citing entity, if available.
+* *qid*: the identifier of the citing entity in Wikidata.
 
 Note: this operation strictly depends on external services (i.e. doi.org and associate applications) for gathering all the metadata of the articles requested. In fact, these metadata are not stored in COCI and are retrieved dynamically upon request.
-#call /metadata/10.1108/jd-12-2013-0166__10.6084/m9.figshare.3443876
+#call /metadata/10.1108/jd-12-2013-0166__10.1038/nature12373
 #field_type str(qid) str(author) datetime(year) str(title) str(source_title) str(source_id) str(volume) str(issue) str(page) str(doi) str(reference) int(citation_count)
-#output_json XXX
+#output_json [
+    {
+        "source_title": "Journal of Documentation",
+        "page": "253-277",
+        "volume": "71",
+        "reference": "10.1136/BMJ.B2680; 10.1145/1816123.1816198; 10.1145/2362499.2362502; 10.1007/978-3-642-41242-4_6; 10.1016/J.WEBSEM.2012.08.001; 10.1371/JOURNAL.PCBI.1000361",
+        "qid": "Q24260641",
+        "citation_count": "1",
+        "issue": "2",
+        "year": "2015",
+        "doi": "10.1108/JD-12-2013-0166",
+        "author": "Dutton, Alexander; Peroni, Silvio; Shotton, David",
+        "title": "Setting our bibliographic references free: towards open citation data"
+    },
+    {
+        "source_title": "Nature",
+        "page": "54-58",
+        "volume": "500",
+        "reference": "10.1021/NN201142F; 10.1021/NL300389Y; 10.1158/0008-5472.CAN-11-3536; 10.1038/NRC3180; 10.3402/NANO.V3I0.11586; 10.1038/NCOMMS1714; 10.1038/NATURE07279; 10.1007/S10549-012-2393-X; 10.1371/JOURNAL.PONE.0049021; 10.1016/J.CELL.2009.11.006; 10.1073/PNAS.0909350107; 10.1038/NMETH.1278; 10.1021/JP073938O; 10.1016/J.CANLET.2004.02.004; 10.1038/NMETH818; 10.1038/NATURE03509",
+        "qid": "Q34460861",
+        "citation_count": "59",
+        "issue": "7460",
+        "year": "2013",
+        "doi": "10.1038/NATURE12373",
+        "author": "",
+        "title": "Nanometre-scale thermometry in a living cell."
+    }
+]
 #sparql PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 SELECT ?author ?year ?title ?source_title ?volume ?issue ?page ?doi ?reference ?citation_count ?qid {
   VALUES ?doi { [[dois]] }
