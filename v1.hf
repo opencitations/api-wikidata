@@ -1,9 +1,9 @@
 #url /api/v1
 #type api
-#base https://w3id.org/oc
+#base https://w3id.org/oc/wikidata
 #method get
-#title Wikidata test
-#description A RAMOSE test for wikidata
+#title Wikidata REST API
+#description A RAMOSE API implementation for Wikidata
 #version 0.0.1
 #license [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/legalcode).
 #contacts [contact@opencitations.net](mailto:contact@opencitations.net)
