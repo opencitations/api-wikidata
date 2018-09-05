@@ -13,8 +13,8 @@
 #url /metadata/{dois}
 #type operation
 #dois str(\"?10\..+[^_\"]((__|\" \")10\..+[^_])*\"?)
-#preprocess upper(dois) --> encode(dois) --> split_dois(dois)
-#postprocess decode_doi(doi, reference) --> distinct()
+#preprocess upper(dois) --> split_dois(dois)
+#postprocess distinct()
 #method get
 #description This operation retrieves the metadata for all the articles identified by the input DOIs.
 
@@ -35,12 +35,15 @@ It is possible to specify one or more DOIs as input of this operation. In this c
 
 Note: this operation strictly depends on external services (i.e. doi.org and associate applications) for gathering all the metadata of the articles requested. In fact, these metadata are not stored in COCI and are retrieved dynamically upon request.
 #call /metadata/10.1108/jd-12-2013-0166__10.6084/m9.figshare.3443876
-#field_type str(author) datetime(year) str(title) str(source_title) str(source_id) str(volume) str(issue) str(page) str(doi) str(reference) int(citation_count)
+#field_type str(qid) str(author) datetime(year) str(title) str(source_title) str(source_id) str(volume) str(issue) str(page) str(doi) str(reference) int(citation_count)
 #output_json XXX
 #sparql PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-SELECT ?author ?year ?title ?source_title ?volume ?issue ?page ?doi ?reference ?citation_count {
+SELECT ?author ?year ?title ?source_title ?volume ?issue ?page ?doi ?reference ?citation_count ?qid {
   VALUES ?doi { [[dois]] }
   ?article wdt:P356 ?doi .
+
+  BIND(STRAFTER(str(?article), "http://www.wikidata.org/entity/") as ?qid) .
+
   {
     SELECT DISTINCT ?article (GROUP_CONCAT(?cited_doi; separator="; ") as ?reference) {
       VALUES ?doi { [[dois]] }
