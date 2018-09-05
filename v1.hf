@@ -1,0 +1,91 @@
+#url /api/v1
+#type api
+#base https://w3id.org/oc
+#method get
+#title Wikidata test
+#description A RAMOSE test for wikidata
+#version 0.0.1
+#license [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/legalcode).
+#contacts [contact@opencitations.net](mailto:contact@opencitations.net)
+#endpoint https://query.wikidata.org/sparql
+#addon wikidataapi
+
+#url /metadata/{dois}
+#type operation
+#dois str(\"?10\..+[^_\"]((__|\" \")10\..+[^_])*\"?)
+#preprocess upper(dois) --> encode(dois) --> split_dois(dois)
+#postprocess decode_doi(doi, reference) --> distinct()
+#method get
+#description This operation retrieves the metadata for all the articles identified by the input DOIs.
+
+It is possible to specify one or more DOIs as input of this operation. In this case, the DOI should be separated with a double underscore ("\_\_") – e.g. "10.1108/jd-12-2013-0166\_\_10.1016/j.websem.2012.08.001\_\_...". The fields returned by this operation are:
+
+* *author*: the semicolon-separated list of authors of the citing entity;
+* *year*: the year of publication of the citing entity;
+* *title*: the title of the citing entity;
+* *source_title*: the title of the venue where the citing entity has been published;
+* *source_id*: the semicolon-separated list of identifiers referring to the source where the citing entity has been published;
+* *volume*: the number of the volume in which the citing entity has been published;
+* *issue*: the number of the issue in which the citing entity has been published;
+* *page*: the starting and ending pages of the citing entity in the context of the venue where it has been published;
+* *doi*: the DOI of the citing entity;
+* *reference*: the semicolon-separated DOIs of all the entities cited by the citing ;
+* *citation_count*: the number of citations received by the citing entity;
+* *oa_link*: the link to the Open Access version of the citing entity, if available.
+
+Note: this operation strictly depends on external services (i.e. doi.org and associate applications) for gathering all the metadata of the articles requested. In fact, these metadata are not stored in COCI and are retrieved dynamically upon request.
+#call /metadata/10.1108/jd-12-2013-0166__10.6084/m9.figshare.3443876
+#field_type str(author) datetime(year) str(title) str(source_title) str(source_id) str(volume) str(issue) str(page) str(doi) str(reference) int(citation_count)
+#output_json XXX
+#sparql PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+SELECT ?author ?year ?title ?source_title ?volume ?issue ?page ?doi ?reference ?citation_count {
+  VALUES ?doi { [[dois]] }
+  ?article wdt:P356 ?doi .
+  {
+    SELECT DISTINCT ?article (GROUP_CONCAT(?cited_doi; separator="; ") as ?reference) {
+      VALUES ?doi { [[dois]] }
+      ?article wdt:P356 ?doi .
+      OPTIONAL {
+        ?article wdt:P2860 ?cited .
+        OPTIONAL {
+          ?cited wdt:P356 ?cited_doi .
+        }
+      }
+    } GROUP BY ?article
+  }
+  {
+    SELECT ?article ?doi (count(?doi) as ?citation_count) {
+      VALUES ?doi { [[dois]] }
+      ?article wdt:P356 ?doi .
+      OPTIONAL { ?article ^wdt:P2860 ?other }
+    } GROUP BY ?article ?doi
+  }
+  OPTIONAL { ?article wdt:P1476 ?title }
+  OPTIONAL {
+    ?article wdt:P577 ?date
+    BIND(SUBSTR(str(?date), 0, 5) as ?year)
+  }
+  OPTIONAL { ?article wdt:P1433/wdt:P1476 ?source_title }
+  OPTIONAL { ?article wdt:P478 ?volume }
+  OPTIONAL { ?article wdt:P433 ?issue }
+  OPTIONAL { ?article wdt:P304 ?page }
+  {
+    SELECT ?article ?doi (GROUP_CONCAT(?a; separator="; ") as ?author) {
+      VALUES ?doi { [[dois]] }
+
+      {
+        SELECT ?article ?doi ?a {
+          VALUES ?doi { [[dois]] }
+
+          ?article wdt:P356 ?doi .
+
+          OPTIONAL {
+            ?article wdt:P50 ?author_res .
+            ?author_res wdt:P735/wdt:P1705 ?g_name ;
+                        wdt:P734/wdt:P1705 ?f_name .
+            BIND(CONCAT(?f_name, ", ",?g_name) as ?a)
+          }
+        } GROUP BY ?article ?doi ?a ORDER BY DESC(?a)}
+    } GROUP BY ?article ?doi
+  }
+} LIMIT 1000
