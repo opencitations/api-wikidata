@@ -1,7 +1,7 @@
 #url /api/v1
 #type api
 #base https://w3id.org/oc/wikidata
-#method get
+#method post
 #title Wikidata REST API
 #description A RAMOSE API implementation for Wikidata
 #version 0.0.2
